@@ -1,11 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
+from mangum import Mangum
+import os
+
+# Set up environment variables
+os.environ.setdefault("SUPABASE_URL", os.getenv("SUPABASE_URL", ""))
+os.environ.setdefault("SUPABASE_KEY", os.getenv("SUPABASE_KEY", ""))
+
 from routers import resume, roadmap, chat
 
-load_dotenv()
-
-app = FastAPI(title="AI Career Compass")
+app = FastAPI(title="AI Career Compass", root_path="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,3 +30,6 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
+
+# Handler for Vercel serverless
+handler = Mangum(app, lifespan="off")
