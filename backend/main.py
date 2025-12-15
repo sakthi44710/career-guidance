@@ -1,16 +1,16 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from mangum import Mangum
-import os
+from dotenv import load_dotenv
 
-# Set up environment variables
-os.environ.setdefault("SUPABASE_URL", os.getenv("SUPABASE_URL", ""))
-os.environ.setdefault("SUPABASE_KEY", os.getenv("SUPABASE_KEY", ""))
+load_dotenv()
 
+# Import routers
 from routers import resume, roadmap, chat
 
-app = FastAPI(title="AI Career Compass", root_path="/api")
+app = FastAPI(title="AI Career Compass")
 
+# CORS for frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -31,5 +31,8 @@ def root():
 def health():
     return {"status": "healthy"}
 
-# Handler for Vercel serverless
-handler = Mangum(app, lifespan="off")
+# For running with uvicorn
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

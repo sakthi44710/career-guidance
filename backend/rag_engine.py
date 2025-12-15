@@ -3,17 +3,13 @@ import json
 import requests
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
+from pypdf import PdfReader
 
 load_dotenv()
 
 class CareerAI:
     def __init__(self):
         self.hf_api_key = os.getenv("HUGGINGFACE_API_KEY")
-        self.embeddings_model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         self.user_data: Dict[str, Dict] = {}
         
         # Multi-sector skill keywords
@@ -119,11 +115,14 @@ class CareerAI:
         return ""  # Using fallback mode
 
     def process_pdf(self, file_path: str):
-        loader = PyPDFLoader(file_path)
-        documents = loader.load()
-        full_text = "\n".join([doc.page_content for doc in documents])
-        texts = self.text_splitter.split_documents(documents)
-        return full_text, [t.page_content for t in texts]
+        """Extract text from PDF using pypdf"""
+        reader = PdfReader(file_path)
+        full_text = ""
+        for page in reader.pages:
+            full_text += page.extract_text() + "\n"
+        # Simple chunking by splitting into paragraphs
+        chunks = [chunk.strip() for chunk in full_text.split("\n\n") if chunk.strip()]
+        return full_text, chunks
 
     def _detect_sector(self, text: str, target_role: str) -> str:
         """Detect which sector the resume/role belongs to"""
